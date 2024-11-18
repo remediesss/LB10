@@ -1,0 +1,151 @@
+#include <iostream>
+#include <cstdlib>
+#include <ctime>
+#include <queue>
+
+#define MAX_VERTICES 100 
+
+void generate_adjacency_matrix(int n, int** matrix) {
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j < n; j++) {
+            matrix[i][j] = 0;
+        }
+    }
+
+    for (int i = 0; i < n; i++) {
+        for (int j = i + 1; j < n; j++) {
+            int edge = rand() % 2;
+            if (edge == 1) {
+                matrix[i][j] = rand() % 10 + 1;
+                matrix[j][i] = matrix[i][j];
+            }
+        }
+    }
+}
+
+void BFSD(int start, int n, int** matrix, int* DIST) {
+    std::queue<int> q;
+    q.push(start);
+    DIST[start] = 0;
+
+    while (!q.empty()) {
+        int v = q.front();
+        q.pop();
+
+        for (int i = 0; i < n; i++) {
+            if (matrix[v][i] > 0 && DIST[i] == -1) {
+                DIST[i] = DIST[v] + matrix[v][i];
+                q.push(i);
+            }
+        }
+    }
+}
+
+int main() {
+    setlocale(LC_ALL, "Russian");
+    int n;
+
+    while (1) {
+        std::cout << "Введите размер матрицы : ";
+        std::cin >> n;
+
+        if (n <= 0 || n > MAX_VERTICES) {
+            break;
+        }
+
+        int** matrix = new int* [n];
+        for (int i = 0; i < n; i++) {
+            matrix[i] = new int[n];
+        }
+        int DIST[MAX_VERTICES]; 
+
+        srand(time(NULL));
+
+        generate_adjacency_matrix(n, matrix);
+
+        std::cout << "Матрица смежности:\n";
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < n; j++) {
+                std::cout << matrix[i][j] << "\t";
+            }
+            std::cout << "\n";
+        }
+
+        int max_distance = -1;
+        int min_distance = n * 10; 
+        int diameter = -1;
+        int radius = n * 10;
+
+        int peripheral_vertices[MAX_VERTICES]; 
+        int central_vertices[MAX_VERTICES];      
+        int peripheral_count = 0;
+        int central_count = 0;
+
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < n; j++) {
+                DIST[j] = -1; // сброс расстояний
+            }
+
+            BFSD(i, n, matrix, DIST);
+
+            max_distance = -1;
+            for (int j = 0; j < n; j++) {
+                if (DIST[j] > max_distance) {
+                    max_distance = DIST[j];
+                }
+            }
+
+            // Обновляем диаметр и радиус
+            if (max_distance > diameter) {
+                diameter = max_distance;
+            }
+            if (max_distance < radius) {
+                radius = max_distance;
+            }
+        }
+
+        // Определяем периферийные и центральные вершины
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < n; j++) {
+                DIST[j] = -1; // сброс расстояний
+            }
+
+            BFSD(i, n, matrix, DIST);
+
+            max_distance = -1;
+            for (int j = 0; j < n; j++) {
+                if (DIST[j] > max_distance) {
+                    max_distance = DIST[j];
+                }
+            }
+
+            if (max_distance == diameter) {
+                peripheral_vertices[peripheral_count++] = i;
+            }
+            if (max_distance == radius) {
+                central_vertices[central_count++] = i;
+            }
+        }
+
+        std::cout << "Диаметр графа: " << diameter << "\n";
+        std::cout << "Радиус графа: " << radius << "\n";
+
+        std::cout << "Периферийные вершины: ";
+        for (int i = 0; i < peripheral_count; i++) {
+            std::cout << peripheral_vertices[i] << " ";
+        }
+        std::cout << "\n";
+
+        std::cout << "Центральные вершины: ";
+        for (int i = 0; i < central_count; i++) {
+            std::cout << central_vertices[i] << " ";
+        }
+        std::cout << "\n";
+
+        for (int i = 0; i < n; i++) {
+            delete[] matrix[i];
+        }
+        delete[] matrix;
+    }
+    return 0;
+}
