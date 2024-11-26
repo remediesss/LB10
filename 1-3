@@ -1,0 +1,100 @@
+#include <iostream>
+#include <cstdlib>
+#include <ctime>
+#include <queue>
+
+void generate_adjacency_matrix(int n, int** matrix) {
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j < n; j++) {
+            matrix[i][j] = 0;
+        }
+    }
+
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j < n; j++) {
+            if (i != j) {
+                int edge = rand() % 2;
+                if (edge == 1) {
+                    matrix[i][j] = rand() % 10 + 1; // Устанавливаем вес ребра
+                }
+            }
+        }
+    }
+}
+
+void BFSD(int start, int n, int** matrix, int* DIST) {
+    std::queue<int> q;
+    q.push(start);
+    DIST[start] = 0;
+
+    while (!q.empty()) {
+        int v = q.front();
+        q.pop();
+
+        for (int i = 0; i < n; i++) {
+            if (matrix[v][i] > 0 && DIST[i] == -1) {
+                q.push(i);
+                DIST[i] = DIST[v] + matrix[v][i];
+            }
+        }
+    }
+}
+
+int main() {
+    setlocale(LC_ALL, "Russian");
+    int n;
+
+    while (true) {
+        std::cout << "Введите размер матрицы: ";
+        std::cin >> n;
+
+        if (n <= 0) {
+            break;
+        }
+
+        int** matrix = new int* [n];
+        for (int i = 0; i < n; i++) {
+            matrix[i] = new int[n];
+        }
+        int* DIST = new int[n];
+
+        srand(time(NULL));
+
+        generate_adjacency_matrix(n, matrix);
+
+        std::cout << "Матрица смежности:\n";
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < n; j++) {
+                std::cout << matrix[i][j] << "\t";
+            }
+            std::cout << "\n";
+        }
+
+        for (int i = 0; i < n; i++) {
+            DIST[i] = -1;
+        }
+
+        int start;
+        std::cout << "Введите вершину, с которой начнется обход: ";
+        std::cin >> start;
+
+        BFSD(start, n, matrix, DIST);
+
+        std::cout << "Расстояния от вершины " << start << ": \n";
+        for (int i = 0; i < n; i++) {
+            if (DIST[i] == -1) {
+                std::cout << "Вершина " << i << ": недоступна\n";
+            }
+            else {
+                std::cout << "Вершина " << i << ": " << DIST[i] << "\n";
+            }
+        }
+
+        for (int i = 0; i < n; i++) {
+            delete[] matrix[i];
+        }
+        delete[] matrix;
+        delete[] DIST;
+    }
+    return 0;
+}
