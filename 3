@@ -1,0 +1,404 @@
+#include <stdio.h>
+#include <string.h>
+#include <iostream>
+#include <cstdlib>
+#include <ctime>
+#include <queue>
+
+void generate_adjacency_matrix_weighted_directed(int n, int** matrix) {
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j < n; j++) {
+            matrix[i][j] = 0;
+        }
+    }
+
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j < n; j++) {
+            if (i != j) {
+                int edge = rand() % 2;
+                if (edge == 1) {
+                    matrix[i][j] = rand() % 10 + 1;
+                }
+            }
+        }
+    }
+}
+
+void generate_adjacency_matrix_weighted_undirected(int n, int** matrix) {
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j < n; j++) {
+            matrix[i][j] = 0;
+        }
+    }
+
+    for (int i = 0; i < n; i++) {
+        for (int j = i + 1; j < n; j++) {
+            int edge = rand() % 2;
+            if (edge == 1) {
+                int weight = rand() % 10 + 1; // weight between 1 and 10
+                matrix[i][j] = weight;
+                matrix[j][i] = weight; // undirected
+            }
+        }
+    }
+}
+
+void generate_adjacency_matrix_unweighted_undirected(int n, int** matrix) {
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j < n; j++) {
+            matrix[i][j] = 0;
+        }
+    }
+
+    for (int i = 0; i < n; i++) {
+        for (int j = i + 1; j < n; j++) {
+            int edge = rand() % 2;
+            matrix[i][j] = edge;
+            matrix[j][i] = edge;
+        }
+    }
+}
+
+void generate_adjacency_matrix_unweighted_directed(int n, int** matrix) {
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j < n; j++) {
+            matrix[i][j] = 0;
+        }
+    }
+
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j < n; j++) {
+            if (i != j) {
+                int edge = rand() % 2;
+                if (edge == 1) {
+                    matrix[i][j] = 1;
+                }
+            }
+        }
+    }
+}
+
+void BFSD_weighted_undirected(int start, int n, int** matrix, int* DIST) {
+    std::queue<int> q;
+    q.push(start);
+    DIST[start] = 0;
+
+    while (!q.empty()) {
+        int v = q.front();
+        q.pop();
+
+
+        for (int i = 0; i < n; i++) {
+            if (matrix[v][i] > 0 && DIST[i] == -1) {
+                q.push(i);
+                DIST[i] = DIST[v] + matrix[v][i];
+            }
+        }
+    }
+}
+
+void BFSD_weighted_directed(int start, int n, int** matrix, int* DIST) {
+    std::queue<int> q;
+    q.push(start);
+    DIST[start] = 0;
+
+    while (!q.empty()) {
+        int v = q.front();
+        q.pop();
+
+        for (int i = 0; i < n; i++) {
+            if (matrix[v][i] > 0 && DIST[i] == -1) {
+                q.push(i);
+                DIST[i] = DIST[v] + matrix[v][i];
+            }
+        }
+    }
+}
+
+void BFSD_unweighted_undirected(int start, int n, int** matrix, int* DIST) {
+    std::queue<int> q;
+    q.push(start);
+    DIST[start] = 0;
+
+    while (!q.empty()) {
+        int v = q.front();
+        q.pop();
+
+        for (int i = 0; i < n; i++) {
+            if (matrix[v][i] == 1 && DIST[i] == -1) {
+                DIST[i] = DIST[v] + 1;
+                q.push(i);
+            }
+        }
+    }
+}
+
+void BFSD_unweighted_directed(int start, int n, int** matrix, int* DIST) {
+    std::queue<int> q;
+    q.push(start);
+    DIST[start] = 0;
+
+    while (!q.empty()) {
+        int v = q.front();
+        q.pop();
+
+        for (int i = 0; i < n; i++) {
+            if (matrix[v][i] == 1 && DIST[i] == -1) { 
+                q.push(i);
+                DIST[i] = DIST[v] + 1;
+            }
+        }
+    }
+}
+
+int main(int argc, char* argv[]) {
+    setlocale(LC_ALL, "Russian");
+    if (argc == 3) {
+        if (strcmp(argv[1], "weighted") == 0) { // граф взвешенный
+            if (strcmp(argv[2], "undirected") == 0) { // и неориентированный
+                int n;
+
+                while (1) {
+                    std::cout << "Введите размер матрицы: ";
+                    std::cin >> n;
+
+                    if (n <= 0) {
+                        break;
+                    }
+
+                    int** matrix = new int* [n];
+                    for (int i = 0; i < n; i++) {
+                        matrix[i] = new int[n];
+                    }
+                    int* DIST = new int[n];
+
+                    srand(time(NULL));
+
+                    generate_adjacency_matrix_weighted_undirected(n, matrix);
+
+                    std::cout << "Матрица смежности:\n";
+                    for (int i = 0; i < n; i++) {
+                        for (int j = 0; j < n; j++) {
+                            std::cout << matrix[i][j] << "\t";
+                        }
+                        std::cout << "\n";
+                    }
+
+                    for (int i = 0; i < n; i++) {
+                        DIST[i] = -1;
+                    }
+
+                    int start;
+                    std::cout << "Введите вершину, с которой начнется обход: ";
+                    std::cin >> start;
+
+                    BFSD_weighted_undirected(start, n, matrix, DIST);
+
+                    std::cout << "Расстояния от вершины " << start << ": \n";
+                    for (int i = 0; i < n; i++) {
+                        if (DIST[i] == -1) {
+                            std::cout << "Вершина " << i << ": недоступна\n";
+                        }
+                        else {
+                            std::cout << "Вершина " << i << ": " << DIST[i] << "\n";
+                        }
+                    }
+
+                    for (int i = 0; i < n; i++) {
+                        delete[] matrix[i];
+                    }
+                    delete[] matrix;
+                    delete[] DIST;
+                }
+                return 0;
+            }
+
+            else if (strcmp(argv[2], "directed") == 0) { // и ориентированный
+
+                int n;
+
+                while (1) {
+                    std::cout << "Введите размер матрицы: ";
+                    std::cin >> n;
+
+                    if (n <= 0) {
+                        break;
+                    }
+
+                    int** matrix = new int* [n];
+                    for (int i = 0; i < n; i++) {
+                        matrix[i] = new int[n];
+                    }
+                    int* DIST = new int[n];
+
+                    srand(time(NULL));
+
+                    generate_adjacency_matrix_weighted_directed(n, matrix);
+
+                    std::cout << "Матрица смежности:\n";
+                    for (int i = 0; i < n; i++) {
+                        for (int j = 0; j < n; j++) {
+                            std::cout << matrix[i][j] << "\t";
+                        }
+                        std::cout << "\n";
+                    }
+
+                    for (int i = 0; i < n; i++) {
+                        DIST[i] = -1;
+                    }
+
+                    int start;
+                    std::cout << "Введите вершину, с которой начнется обход: ";
+                    std::cin >> start;
+
+                    BFSD_weighted_directed(start, n, matrix, DIST);
+
+                    std::cout << "Расстояния от вершины " << start << ": \n";
+                    for (int i = 0; i < n; i++) {
+                        if (DIST[i] == -1) {
+                            std::cout << "Вершина " << i << ": недоступна\n";
+                        }
+                        else {
+                            std::cout << "Вершина " << i << ": " << DIST[i] << "\n";
+                        }
+                    }
+
+                    for (int i = 0; i < n; i++) {
+                        delete[] matrix[i];
+                    }
+                    delete[] matrix;
+                    delete[] DIST;
+                }
+                return 0;
+            }
+        }
+
+        else if (strcmp(argv[1], "unweighted") == 0) { // граф не взвешенный
+
+            if (strcmp(argv[2], "undirected") == 0) { // и не ориентированный
+                int n;
+
+                while (1) {
+                    std::cout << "Введите размер матрицы: ";
+                    std::cin >> n;
+
+                    if (n <= 0) {
+                        break;
+                    }
+
+                    int** matrix = new int* [n];
+                    for (int i = 0; i < n; i++) {
+                        matrix[i] = new int[n];
+                    }
+                    int* DIST = new int[n];
+
+                    srand(time(NULL));
+
+                    generate_adjacency_matrix_unweighted_undirected(n, matrix);
+
+                    std::cout << "Матрица смежности:\n";
+                    for (int i = 0; i < n; i++) {
+                        for (int j = 0; j < n; j++) {
+                            std::cout << matrix[i][j] << " ";
+                        }
+                        std::cout << "\n";
+                    }
+
+                    for (int i = 0; i < n; i++) {
+                        DIST[i] = -1;
+                    }
+
+                    int start;
+                    std::cout << "Введите вершину, с которой начнется обход: ";
+                    std::cin >> start;
+
+                    BFSD_unweighted_undirected(start, n, matrix, DIST);
+
+                    std::cout << "Расстояния от вершины " << start << ": \n";
+                    for (int i = 0; i < n; i++) {
+                        if (DIST[i] == -1) {
+                            std::cout << "Вершина " << i << ": недоступна\n";
+                        }
+                        else {
+                            std::cout << "Вершина " << i << ": " << DIST[i] << "\n";
+                        }
+                    }
+
+                    for (int i = 0; i < n; i++) {
+                        delete[] matrix[i];
+                    }
+                    delete[] matrix;
+                    delete[] DIST;
+                }
+                return 0;
+            }
+
+            else if (strcmp(argv[2], "directed") == 0) { // и ориентированный
+
+                int n;
+
+                while (true) {
+                    std::cout << "Введите размер матрицы: ";
+                    std::cin >> n;
+
+                    if (n <= 0) {
+                        break;
+                    }
+
+                    int** matrix = new int* [n];
+                    for (int i = 0; i < n; i++) {
+                        matrix[i] = new int[n];
+                    }
+                    int* DIST = new int[n];
+
+                    srand(static_cast<unsigned int>(time(NULL)));
+
+                    generate_adjacency_matrix_unweighted_directed(n, matrix);
+
+                    std::cout << "Матрица смежности:\n";
+                    for (int i = 0; i < n; i++) {
+                        for (int j = 0; j < n; j++) {
+                            std::cout << matrix[i][j] << "\t";
+                        }
+                        std::cout << "\n";
+                    }
+
+                    for (int i = 0; i < n; i++) {
+                        DIST[i] = -1;
+                    }
+
+                    int start;
+                    std::cout << "Введите вершину, с которой начнется обход: ";
+                    std::cin >> start;
+
+                    BFSD_unweighted_directed(start, n, matrix, DIST);
+
+                    std::cout << "Расстояния от вершины " << start << ": \n";
+                    for (int i = 0; i < n; i++) {
+                        if (DIST[i] == -1) {
+                            std::cout << "Вершина " << i << ": недоступна\n";
+                        }
+                        else {
+                            std::cout << "Вершина " << i << ": " << DIST[i] << "\n";
+                        }
+                    }
+
+                    for (int i = 0; i < n; i++) {
+                        delete[] matrix[i];
+                    }
+                    delete[] matrix;
+                    delete[] DIST;
+                }
+                return 0;
+
+            }
+        }
+
+
+    }
+
+    else {
+        printf("аргументы не были переданы!");
+        return 0;
+    }
+}
